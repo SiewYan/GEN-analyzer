@@ -71,7 +71,8 @@ class Analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   // ----------member data ---------------------------
   std::vector<reco::GenParticle> IndexByPtGen(std::vector<reco::GenParticle> vector);
   std::vector<reco::GenJet> IndexByPtGenJet(std::vector<reco::GenJet> vector);
-
+  std::vector<std::pair<reco::GenJet*,reco::GenParticle*>> MatchJetwParton( std::vector<reco::GenJet> genjetV , std::vector<reco::GenParticle> genpartV );
+  
   struct compgen {
     bool operator() (reco::GenParticle& i, reco::GenParticle& j) { return ( (i.pt()) > (j.pt()) ); } // sort in descending order 
   };
