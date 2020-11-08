@@ -98,6 +98,18 @@ std::vector<reco::GenParticle> GenAnalyzer::FilterGenVectorbyId(std::vector<reco
   }
   return newVect;
 }
+
+std::vector<reco::GenParticle> GenAnalyzer::FilterGenVectorbyStatus(std::vector<reco::GenParticle>& Vect, std::vector<int> stat) {
+
+  std::vector<reco::GenParticle> newVect;
+  //loop on gen particle                                                                                                                                                           
+  for(std::vector<reco::GenParticle>::const_iterator it = Vect.begin(); it != Vect.end(); ++it) {
+    for(unsigned int i = 0; i < stat.size(); i++) {
+    if(it->status() == stat[i]) newVect.push_back(*it); // Fill vector
+    }
+  }
+  return newVect;
+}
       
 std::map<std::string, float> GenAnalyzer::FillLheMap(const edm::Event& iEvent) {
     std::map<std::string, float> Var;

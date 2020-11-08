@@ -1,5 +1,5 @@
-#ifndef LAMBDAANALYZER_H
-#define LAMBDAANALYZER_H
+#ifndef ANALYZER_H
+#define ANALYZER_H
 
 // system include files                                                                                                                    
 #include <memory>
@@ -53,10 +53,10 @@
 // constructor "usesResource("TFileService");" 
 // This will improve performance in multithreaded jobs.                                                                                                                                                               
 
-class LambdaAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+class Analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
  public:
-  explicit LambdaAnalyzer(const edm::ParameterSet&);
-  ~LambdaAnalyzer();
+  explicit Analyzer(const edm::ParameterSet&);
+  ~Analyzer();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -69,8 +69,8 @@ class LambdaAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   virtual void endJob() override;
 
   // ----------member data ---------------------------
-  std::vector<reco::GenParticle> IndexByPtGen(std::vector<reco::GenParticle> vector);
-  std::vector<reco::GenJet> IndexByPtGenJet(std::vector<reco::GenJet> vector);
+  void IndexByPtGen(std::vector<reco::GenParticle> vector);
+  void IndexByPtGenJet(std::vector<reco::GenJet> vector);
 
   struct compgen {
     bool operator() (reco::GenParticle& i, reco::GenParticle& j) { return ( (i.pt()) > (j.pt()) ); } // sort in descending order 

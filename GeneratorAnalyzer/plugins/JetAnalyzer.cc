@@ -54,15 +54,6 @@ std::vector<reco::GenJet> JetAnalyzer::FillAK8GenJetVector(const edm::Event& iEv
   }
   return Vect;
 }
-//HERE
-//void JetAnalyzer::MatchAK4JetwGenPart(std::vector<pat::Jet>& Jets, ####, float angle) {
-//  for(unsigned int m = 0; m < Muons.size(); m++) {
-//    for(unsigned int j = 0; j < Jets.size(); ) {
-//      if(deltaR(Jets[j], Muons[m]) < angle) Jets.erase(Jets.begin() + j);
-//      else j++;
-//    }
-//  }
-//}
 
 void JetAnalyzer::CleanJetsFromMuons(std::vector<pat::Jet>& Jets, std::vector<pat::Muon>& Muons, float angle) {
     for(unsigned int m = 0; m < Muons.size(); m++) {
