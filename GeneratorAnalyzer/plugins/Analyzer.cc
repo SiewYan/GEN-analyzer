@@ -214,10 +214,9 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 theGenAnalyzer->FindLastDaughterGen(quarks)->status() == quarks->status() // last copy of outgoing hard parton
 	 && theGenAnalyzer->FindLastDaughterGen(quarks)->pdgId() == quarks->pdgId() // last copy pf outgoing hard parton
 	 && theGenAnalyzer->FindMother(quarks)->pdgId() != 25 // exclude quarks decay from Higgs
-	 //&& theGenAnalyzer->FindMother(quarks)->status() == 22 // only parton decay from intermediate particle, hard scattering
 	  ){
        HardPartons.push_back(quarks);
-       if (i<3){
+       if (i<4){
 	 Hist[("g_Had"+std::to_string(i+1)+"pt").c_str()]->Fill(quarks->pt(), EventWeight);
 	 Hist[("g_Had"+std::to_string(i+1)+"eta").c_str()]->Fill(quarks->eta(), EventWeight);
 	 Hist[("g_Had"+std::to_string(i+1)+"phi").c_str()]->Fill(quarks->phi(), EventWeight);
