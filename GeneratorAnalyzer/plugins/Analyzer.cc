@@ -333,6 +333,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Jet composite variable
    Hist["f_GenAK4j12m"]->Fill(AK4jj_ggf.M(), EventWeight);
    Hist["f_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_ggf.Phi() ) , EventWeight );
+   Hist["f_GenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_ggf.Phi(), AK4j2_ggf.Eta() ), EventWeight);
    Hist["f_HHGenAK4j12Pt"]->Fill( (AK4jj_ggf+HH).Pt() , EventWeight );
 
    // vbf
@@ -374,6 +375,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Jet composite variable
    Hist["v_GenAK4j12m"]->Fill(AK4jj_vbf.M(), EventWeight);
    Hist["v_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_vbf.Phi() ) , EventWeight );
+   Hist["v_HHGenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
    Hist["v_HHGenAK4j12Pt"]->Fill( (AK4jj_vbf+HH).Pt() , EventWeight );
    
    tree->Fill();
