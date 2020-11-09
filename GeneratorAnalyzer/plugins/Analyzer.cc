@@ -265,7 +265,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    // vbf like parton level filter
    // parton level filter --> mjj > 100 GeV , pt > 40 GeV ; and delta R > 0.5
-   int vbf_like=0;
+   int vbf_like=1;
    if ( MatchAK4Jets.size()>=2 ){
      reco::Particle::LorentzVector j1(0.,0.,0.,0.);
      reco::Particle::LorentzVector j2(0.,0.,0.,0.);
@@ -274,13 +274,13 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      if ( (j1.Pt()>40 && j2.Pt()>40) 
 	  && ( deltaR( j1.Phi() , j1.Eta() , j2.Phi() , j2.Eta() ) > 0.5 ) 
 	  && ( (j1+j2).M() > 100 ) ){
-       vbf_like=1;
+       vbf_like=2;
      }      
    }
    Hist["g_vbflikeevent"]->Fill(vbf_like,EventWeight);
    
    // ggf
-   if (vbf_like == 0){
+   if (vbf_like == 1){
      reco::Particle::LorentzVector AK4jj_ggf;
      reco::Particle::LorentzVector AK4j1_ggf(0.,0.,0.,0.);
      reco::Particle::LorentzVector AK4j2_ggf(0.,0.,0.,0.);
