@@ -370,14 +370,18 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    
    AK4jj_vbf = AK4j1_vbf + AK4j2_vbf;
-   Hist["v_GenAK4j12dPhi"]->Fill(deltaPhi( AK4j1_vbf.Phi() , AK4j2_vbf.Phi() ), EventWeight);
-   Hist["v_GenAK4j12dR"]->Fill(deltaR( AK4j1_vbf.Phi(), AK4j1_vbf.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
-   // Jet composite variable
-   Hist["v_GenAK4j12m"]->Fill(AK4jj_vbf.M(), EventWeight);
-   Hist["v_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_vbf.Phi() ) , EventWeight );
-   Hist["v_HHGenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
-   Hist["v_HHGenAK4j12Pt"]->Fill( (AK4jj_vbf+HH).Pt() , EventWeight );
    
+   if (MatchAK4Jets_vbf.size()>=2){
+     Hist["v_GenAK4j12dPhi"]->Fill(deltaPhi( AK4j1_vbf.Phi() , AK4j2_vbf.Phi() ), EventWeight);
+     Hist["v_GenAK4j12dR"]->Fill(deltaR( AK4j1_vbf.Phi(), AK4j1_vbf.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
+     Hist["v_GenAK4j12dEta"]->Fill( abs(AK4j1_vbf - AK4j2_vbf ) , EventWeight );
+     // Jet composite variable
+     Hist["v_GenAK4j12m"]->Fill(AK4jj_vbf.M(), EventWeight);
+     Hist["v_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_vbf.Phi() ) , EventWeight );
+     Hist["v_HHGenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
+     Hist["v_HHGenAK4j12Pt"]->Fill( (AK4jj_vbf+HH).Pt() , EventWeight );
+   }
+
    tree->Fill();
    
    //std::cout << "Filling finished" << std::endl;

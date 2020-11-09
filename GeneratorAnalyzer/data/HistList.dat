@@ -162,6 +162,7 @@ v_GenAK4j12dR            ;GenAK4j12dR                 100     0     5    Log
 v_GenAK4j12dR-gluon            ;GenAK4j12dR~gluon                 100     0     5    Log
 v_GenAK4j12dR-light            ;GenAK4j12dR~light                 100     0     5    Log
 v_GenAK4j12dR-heavy            ;GenAK4j12dR~heavy                 100     0     5    Log
+v_GenAK4j12dEta            ;GenAK4j12dEta                 50     0     10    Lin
 v_GenAK4j12m           ;GenAK4j12m~[GeV/c2]          50      0    1000   Log
 v_HHGenAK4j12dPhi         ;HHGenAK4j12dPhi              50    0  3.15   Log
 v_HHGenAK4j12Pt           ;HHGenAK4j12Pt                30       0    300 Log
