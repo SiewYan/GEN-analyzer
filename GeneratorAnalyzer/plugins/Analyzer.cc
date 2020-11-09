@@ -281,7 +281,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    
    // ggf
    if (vbf_like == 1){
-     Hist['f_GenAK4nJet']->Fill(MatchAK4Jets.size(),EventWeight);
+     Hist["f_GenAK4nJet"]->Fill(MatchAK4Jets.size(),EventWeight);
      reco::Particle::LorentzVector AK4jj_ggf;
      reco::Particle::LorentzVector AK4j1_ggf(0.,0.,0.,0.);
      reco::Particle::LorentzVector AK4j2_ggf(0.,0.,0.,0.);
@@ -325,7 +325,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    
    // vbf
    else {
-     Hist['v_GenAK4nJet']->Fill(MatchAK4Jets.size(),EventWeight);
+     Hist["v_GenAK4nJet"]->Fill(MatchAK4Jets.size(),EventWeight);
      reco::Particle::LorentzVector AK4jj_vbf;
      reco::Particle::LorentzVector AK4j1_vbf(0.,0.,0.,0.);
      reco::Particle::LorentzVector AK4j2_vbf(0.,0.,0.,0.);
