@@ -207,7 +207,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::vector<reco::GenParticle> GenQVect = theGenAnalyzer->FilterGenVectorbyId( GenPVect , HadIds );
    std::vector<reco::GenParticle> GenQFVect = IndexByPtGen( theGenAnalyzer->FilterGenVectorbyStatus( GenQVect , {3,23} ) ); // filter only outgoing hard parton
    //
-   std::vector<reco::GenParticle*> HardPartons;
+   std::vector<reco::GenParticle> HardPartons;
    for(unsigned int i = 0; i < GenQFVect.size(); i++){
      reco::GenParticle* quarks = &(GenQFVect[i]);
      if ( 
@@ -215,7 +215,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 && theGenAnalyzer->FindLastDaughterGen(quarks)->pdgId() == quarks->pdgId() // last copy pf outgoing hard parton
 	 && theGenAnalyzer->FindMother(quarks)->pdgId() != 25 // exclude quarks decay from Higgs
 	  ){
-       HardPartons.push_back(quarks);
+       HardPartons.push_back(*quarks);
        if (i<4){
 	 Hist[("g_Had"+std::to_string(i+1)+"pt").c_str()]->Fill(quarks->pt(), EventWeight);
 	 Hist[("g_Had"+std::to_string(i+1)+"eta").c_str()]->Fill(quarks->eta(), EventWeight);
@@ -232,7 +232,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // GenJet AK4
    std::vector<reco::GenJet> aK4JetsVect = IndexByPtGenJet( theJetAnalyzer->FillAK4GenJetVector(iEvent) );   
    // Matched GenJet AK4
-   std::vector<std::pair<reco::GenJet*,reco::GenParticle*>> MatchAK4Jets = MatchJetwParton( aK4JetsVect , GenQFVect );
+   std::vector<std::pair<reco::GenJet*,reco::GenParticle*>> MatchAK4Jets = MatchJetwParton( aK4JetsVect , HardPartons );
    
    Hist["g_GenAK4nJet"]->Fill(MatchAK4Jets.size());
   
@@ -264,124 +264,109 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    // vbf like parton level filter
-   // parton level filter --> mjj > 100 GeV and delta R > 5
-   std::vector<reco::GenParticle> ggf_like_parton;
-   std::vector<reco::GenParticle> vbf_like_parton;
-   reco::Particle::LorentzVector p1(0.,0.,0.,0.);
-   reco::Particle::LorentzVector p2(0.,0.,0.,0.);
-   for(unsigned int i = 0; i < HardPartons.size(); i++){
-     reco::GenParticle* parton1 = HardPartons[i]; p1 = parton1->p4();
-     if (p1.Pt()<40) continue;
-     for(unsigned int j = 0; j < HardPartons.size(); j++){
-       if (i==j) continue;
-       reco::GenParticle* parton2 = HardPartons[j]; p2 = parton2->p4();
-       if(p2.Pt()<40) continue;
-       // vbf like
-       if( ( deltaR( p1.Phi() , p1.Eta() , p2.Phi() , p2.Eta() ) > 0.5 ) && ( (p1+p2).M() > 100 ) ){ 
-	 vbf_like_parton.push_back(*parton1); // deferencing pointer
-       }
-       else{
-	 ggf_like_parton.push_back(*parton1); // deferencing pointer
-       }
-     } //second loop
-   } //first loop
-   Hist["f_nHad"]->Fill(ggf_like_parton.size());
-   Hist["v_nHad"]->Fill(vbf_like_parton.size());
-
-   // GenJet AK4
-   // ggf matched genjet 
-   std::vector<std::pair<reco::GenJet*,reco::GenParticle*>> MatchAK4Jets_ggf = MatchJetwParton( aK4JetsVect , ggf_like_parton );
-   Hist["f_GenAK4nJet"]->Fill(MatchAK4Jets_ggf.size());
-   // vbf matched genjet
-   std::vector<std::pair<reco::GenJet*,reco::GenParticle*>> MatchAK4Jets_vbf = MatchJetwParton( aK4JetsVect , vbf_like_parton );
-   Hist["v_GenAK4nJet"]->Fill(MatchAK4Jets_vbf.size());
+   // parton level filter --> mjj > 100 GeV , pt > 40 GeV ; and delta R > 0.5
+   int vbf_like=0;
+   if ( MatchAK4Jets.size()>=2 ){
+     reco::Particle::LorentzVector j1(0.,0.,0.,0.);
+     reco::Particle::LorentzVector j2(0.,0.,0.,0.);
+     j1 = MatchAK4Jets[0].first->p4();
+     j2 = MatchAK4Jets[1].first->p4();
+     if ( (j1.Pt()>40 && j2.Pt()>40) 
+	  && ( deltaR( j1.Phi() , j1.Eta() , j2.Phi() , j2.Eta() ) > 0.5 ) 
+	  && ( (j1+j2).M() > 100 ) ){
+       vbf_like=1;
+     }      
+   }
+   Hist["g_vbflikeevent"]->Fill(vbf_like,EventWeight);
    
-   // ggF
-   reco::Particle::LorentzVector AK4jj_ggf;
-   reco::Particle::LorentzVector AK4j1_ggf(0.,0.,0.,0.);
-   reco::Particle::LorentzVector AK4j2_ggf(0.,0.,0.,0.);
-   
-   for(unsigned int i = 0; i < MatchAK4Jets_ggf.size(); i++){
-     reco::GenJet* ak4jet = MatchAK4Jets_ggf[i].first;
-     reco::GenParticle* quarks = MatchAK4Jets_ggf[i].second;
-     if (i<3){
-       Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt").c_str()]->Fill(ak4jet->pt(), EventWeight);
-       Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       Hist[("f_GenAK4Jet"+std::to_string(i+1)+"phi").c_str()]->Fill(ak4jet->phi(), EventWeight);
-       Hist[("f_GenAK4Jet"+std::to_string(i+1)+"mass").c_str()]->Fill(ak4jet->mass(), EventWeight);
-       Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pdgid").c_str()]->Fill(quarks->pdgId() , EventWeight);
-       if ( abs(quarks->pdgId()) == 21 ){
-	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-gluon").c_str()]->Fill(ak4jet->pt(), EventWeight);
-	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-gluon").c_str()]->Fill(ak4jet->eta(), EventWeight);
+   // ggf
+   if (vbf_like == 0){
+     reco::Particle::LorentzVector AK4jj_ggf;
+     reco::Particle::LorentzVector AK4j1_ggf(0.,0.,0.,0.);
+     reco::Particle::LorentzVector AK4j2_ggf(0.,0.,0.,0.);
+     
+     for(unsigned int i = 0; i < MatchAK4Jets.size(); i++){
+       reco::GenJet* ak4jet = MatchAK4Jets[i].first;
+       reco::GenParticle* quarks = MatchAK4Jets[i].second;
+       if (i<3){
+	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"phi").c_str()]->Fill(ak4jet->phi(), EventWeight);
+	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"mass").c_str()]->Fill(ak4jet->mass(), EventWeight);
+	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pdgid").c_str()]->Fill(quarks->pdgId() , EventWeight);
+	 if ( abs(quarks->pdgId()) == 21 ){
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-gluon").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-gluon").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 else if ( abs(quarks->pdgId()) == 5 ){
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-heavy").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-heavy").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 else{
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-light").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-light").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 if (i==0) AK4j1_ggf = ak4jet->p4();
+	 if (i==1) AK4j2_ggf = ak4jet->p4();
        }
-       else if ( abs(quarks->pdgId()) == 5 ){
-	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-heavy").c_str()]->Fill(ak4jet->pt(), EventWeight);
-         Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-heavy").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       }
-       else{
-	 Hist[("f_GenAK4Jet"+std::to_string(i+1)+"pt-light").c_str()]->Fill(ak4jet->pt(), EventWeight);
-         Hist[("f_GenAK4Jet"+std::to_string(i+1)+"eta-light").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       }
-       if (i==0) AK4j1_ggf = ak4jet->p4();
-       if (i==1) AK4j2_ggf = ak4jet->p4();
      }
+     
+     AK4jj_ggf = AK4j1_ggf + AK4j2_ggf;
+     Hist["f_GenAK4j12dPhi"]->Fill(deltaPhi( AK4j1_ggf.Phi() , AK4j2_ggf.Phi() ), EventWeight);
+     Hist["f_GenAK4j12dR"]->Fill(deltaR( AK4j1_ggf.Phi(), AK4j1_ggf.Eta(), AK4j2_ggf.Phi(), AK4j2_ggf.Eta() ), EventWeight);
+     Hist["f_GenAK4j12dEta"]->Fill( abs(AK4j1_ggf.Eta() - AK4j2_ggf.Eta() ) , EventWeight );
+     // Jet composite variable
+     Hist["f_GenAK4j12m"]->Fill(AK4jj_ggf.M(), EventWeight);
+     Hist["f_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_ggf.Phi() ) , EventWeight );
+     Hist["f_GenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_ggf.Phi(), AK4j2_ggf.Eta() ), EventWeight);
+     Hist["f_HHGenAK4j12Pt"]->Fill( (AK4jj_ggf+HH).Pt() , EventWeight );
    }
    
-   AK4jj_ggf = AK4j1_ggf + AK4j2_ggf;
-   Hist["f_GenAK4j12dPhi"]->Fill(deltaPhi( AK4j1_ggf.Phi() , AK4j2_ggf.Phi() ), EventWeight);
-   Hist["f_GenAK4j12dR"]->Fill(deltaR( AK4j1_ggf.Phi(), AK4j1_ggf.Eta(), AK4j2_ggf.Phi(), AK4j2_ggf.Eta() ), EventWeight);
-   // Jet composite variable
-   Hist["f_GenAK4j12m"]->Fill(AK4jj_ggf.M(), EventWeight);
-   Hist["f_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_ggf.Phi() ) , EventWeight );
-   Hist["f_GenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_ggf.Phi(), AK4j2_ggf.Eta() ), EventWeight);
-   Hist["f_HHGenAK4j12Pt"]->Fill( (AK4jj_ggf+HH).Pt() , EventWeight );
-
    // vbf
-
-   reco::Particle::LorentzVector AK4jj_vbf;
-   reco::Particle::LorentzVector AK4j1_vbf(0.,0.,0.,0.);
-   reco::Particle::LorentzVector AK4j2_vbf(0.,0.,0.,0.);
-   
-   for(unsigned int i = 0; i < MatchAK4Jets_vbf.size(); i++){
-     reco::GenJet* ak4jet = MatchAK4Jets_vbf[i].first;
-     reco::GenParticle* quarks = MatchAK4Jets_vbf[i].second;
-     if (i<3){
-       Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt").c_str()]->Fill(ak4jet->pt(), EventWeight);
-       Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       Hist[("v_GenAK4Jet"+std::to_string(i+1)+"phi").c_str()]->Fill(ak4jet->phi(), EventWeight);
-       Hist[("v_GenAK4Jet"+std::to_string(i+1)+"mass").c_str()]->Fill(ak4jet->mass(), EventWeight);
-       Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pdgid").c_str()]->Fill(quarks->pdgId() , EventWeight);
-
-       if ( abs(quarks->pdgId()) == 21 ){
-	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-gluon").c_str()]->Fill(ak4jet->pt(), EventWeight);
-         Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-gluon").c_str()]->Fill(ak4jet->eta(), EventWeight);
+   else {
+     reco::Particle::LorentzVector AK4jj_vbf;
+     reco::Particle::LorentzVector AK4j1_vbf(0.,0.,0.,0.);
+     reco::Particle::LorentzVector AK4j2_vbf(0.,0.,0.,0.);
+     
+     for(unsigned int i = 0; i < MatchAK4Jets.size(); i++){
+       reco::GenJet* ak4jet = MatchAK4Jets[i].first;
+       reco::GenParticle* quarks = MatchAK4Jets[i].second;
+       if (i<3){
+	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"phi").c_str()]->Fill(ak4jet->phi(), EventWeight);
+	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"mass").c_str()]->Fill(ak4jet->mass(), EventWeight);
+	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pdgid").c_str()]->Fill(quarks->pdgId() , EventWeight);
+	 
+	 if ( abs(quarks->pdgId()) == 21 ){
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-gluon").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-gluon").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 else if ( abs(quarks->pdgId()) == 5 ){
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-heavy").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-heavy").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 else{
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-light").c_str()]->Fill(ak4jet->pt(), EventWeight);
+	   Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-light").c_str()]->Fill(ak4jet->eta(), EventWeight);
+	 }
+	 if (i==0) AK4j1_vbf = ak4jet->p4();
+	 if (i==1) AK4j2_vbf = ak4jet->p4();
        }
-       else if ( abs(quarks->pdgId()) == 5 ){
-         Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-heavy").c_str()]->Fill(ak4jet->pt(), EventWeight);
-         Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-heavy").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       }
-       else{
-	 Hist[("v_GenAK4Jet"+std::to_string(i+1)+"pt-light").c_str()]->Fill(ak4jet->pt(), EventWeight);
-         Hist[("v_GenAK4Jet"+std::to_string(i+1)+"eta-light").c_str()]->Fill(ak4jet->eta(), EventWeight);
-       }
-       if (i==0) AK4j1_vbf = ak4jet->p4();
-       if (i==1) AK4j2_vbf = ak4jet->p4();
      }
-   }
-   
-   AK4jj_vbf = AK4j1_vbf + AK4j2_vbf;
-   
-   if (MatchAK4Jets_vbf.size()>=2){
+     
+     AK4jj_vbf = AK4j1_vbf + AK4j2_vbf;
+     
      Hist["v_GenAK4j12dPhi"]->Fill(deltaPhi( AK4j1_vbf.Phi() , AK4j2_vbf.Phi() ), EventWeight);
      Hist["v_GenAK4j12dR"]->Fill(deltaR( AK4j1_vbf.Phi(), AK4j1_vbf.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
-     Hist["v_GenAK4j12dEta"]->Fill( abs(AK4j1_vbf - AK4j2_vbf ) , EventWeight );
+     Hist["v_GenAK4j12dEta"]->Fill( abs(AK4j1_vbf.Eta() - AK4j2_vbf.Eta() ) , EventWeight );
      // Jet composite variable
      Hist["v_GenAK4j12m"]->Fill(AK4jj_vbf.M(), EventWeight);
      Hist["v_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj_vbf.Phi() ) , EventWeight );
      Hist["v_HHGenAK4j12dR"]->Fill(deltaR( HH.Phi(), HH.Eta(), AK4j2_vbf.Phi(), AK4j2_vbf.Eta() ), EventWeight);
      Hist["v_HHGenAK4j12Pt"]->Fill( (AK4jj_vbf+HH).Pt() , EventWeight );
-   }
-
+   } // end 2 matchjet if 
+   
    tree->Fill();
    
    //std::cout << "Filling finished" << std::endl;
