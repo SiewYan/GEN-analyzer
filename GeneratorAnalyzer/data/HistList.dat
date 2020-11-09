@@ -72,6 +72,7 @@ g_HHdPhi               ;GenHHdPhi                    50      0  3.15   Log
 g_HHdR                 ;GenHHdR                      100     0     5    Log
 g_GenAK4j12m           ;GenAK4j12m~[GeV/c2]          50      0    1000   Log
 g_HHGenAK4j12dPhi         ;HHGenAK4j12dPhi              50    0  3.15   Lin
+g_HHGenAK4j12dR           ;HHGenAK4j12dR                 100     0     5    Lin
 g_HHGenAK4j12Pt           ;HHGenAK4j12Pt                30       0    300 Log
 f_GenAK4nJet             ;GenAK4nJet                  21   -0.5   20.5   Lin
 f_GenAK4Jet1pt           ;GenAK4Jet1pt~[GeV]          40     0   800    Log

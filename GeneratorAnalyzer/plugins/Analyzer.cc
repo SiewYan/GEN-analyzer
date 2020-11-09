@@ -260,6 +260,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Jet composite variable
    Hist["g_GenAK4j12m"]->Fill(AK4jj.M(), EventWeight);
    Hist["g_HHGenAK4j12dPhi"]->Fill( deltaPhi( HH.Phi() , AK4jj.Phi() ) , EventWeight );
+   Hist["v_HHGenAK4j12dR"]->Fill( deltaR( HH.Phi(), HH.Eta(), AK4jj.Phi(), AK4jj.Eta() ), EventWeight);
    Hist["g_HHGenAK4j12Pt"]->Fill( (AK4jj+HH).Pt() , EventWeight );
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
